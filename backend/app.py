@@ -4,6 +4,7 @@ Backend API using FastAPI
 """
 
 from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Body
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
@@ -202,6 +203,18 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now()}
+
+@app.get("/api/admin/download-db")
+async def download_database(current_user: dict = Depends(get_current_active_user)):
+    """Download the SQLite database file (Super Admin only)."""
+    if current_user.get('role') != 'Super Admin':
+        raise HTTPException(status_code=403, detail="Only Super Admins can download the database")
+    candidates = [db.DB_PATH, os.path.join(db.BASE_DIR, os.path.basename(db.DB_PATH))]
+    db_path = next((p for p in candidates if os.path.exists(p)), None)
+    if not db_path:
+        raise HTTPException(status_code=404, detail="Database file not found")
+    return FileResponse(db_path, filename='ict_automation.db',
+                        media_type='application/x-sqlite3')
 
 # Authentication endpoints
 @app.post("/token", response_model=Token)

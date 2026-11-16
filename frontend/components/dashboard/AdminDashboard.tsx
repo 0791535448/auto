@@ -26,7 +26,8 @@ import {
   Award,
   Shield,
   GraduationCap,
-  Ticket
+  Ticket,
+  Download
 } from 'lucide-react'
 import { BranchConfig } from '@/components/settings/BranchConfig'
 import { DeviceTypeConfig } from '@/components/settings/DeviceTypeConfig'
@@ -165,6 +166,11 @@ const menuItems: MenuItem[] = [
         id: 'software',
         label: 'Software',
         icon: <Database className="h-4 w-4" />
+      },
+      {
+        id: 'database',
+        label: 'Database Backup',
+        icon: <Download className="h-4 w-4" />
       }
     ]
   }
@@ -241,6 +247,8 @@ export const AdminDashboard: React.FC = () => {
         return <StatusesContent />
       case 'software':
         return <SoftwareContent />
+      case 'database':
+        return <DatabaseContent />
       default:
         return <DashboardContent onNavigate={setActiveMenu} />
     }
@@ -504,3 +512,54 @@ const ModelsContent: React.FC = () => <ModelConfig />
 const StatusesContent: React.FC = () => <StatusConfig />
 
 const SoftwareContent: React.FC = () => <SoftwareConfig />
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
+const DatabaseContent: React.FC = () => {
+  const [downloading, setDownloading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleDownload = async () => {
+    setDownloading(true)
+    setError('')
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE_URL}/api/admin/download-db`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}))
+        throw new Error(body.detail || `Download failed (${response.status})`)
+      }
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'ict_automation.db'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err: any) {
+      setError(err.message || 'Download failed')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Database Backup</CardTitle>
+        <CardDescription>
+          Download the SQLite database file. Open it with DB Browser for SQLite or any SQLite client.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Button onClick={handleDownload} disabled={downloading}>
+          <Download className="h-4 w-4 mr-2" />
+          {downloading ? 'Downloading...' : 'Download Database'}
+        </Button>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+      </CardContent>
+    </Card>
+  )
+}
