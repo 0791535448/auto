@@ -38,6 +38,8 @@ import {
 } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
 interface ICTOfficer {
   id: number
   username: string
@@ -91,7 +93,7 @@ export const ICTOfficer: React.FC<ICTOfficerProps> = ({ role = 'ICT Officer', ti
 
   const loadOfficers = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/users?t=' + Date.now())
+      const response = await fetch(`${API_BASE_URL}/api/users?t=` + Date.now())
       if (response.ok) {
         const data = await response.json()
         const users = data.users || []
@@ -176,7 +178,7 @@ export const ICTOfficer: React.FC<ICTOfficerProps> = ({ role = 'ICT Officer', ti
 
   const handleAddOfficer = async (newOfficer: ICTOfficerFormData) => {
     try {
-      const response = await fetch('http://localhost:8000/api/users', {
+      const response = await fetch(`${API_BASE_URL}/api/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newOfficer)
@@ -200,7 +202,7 @@ export const ICTOfficer: React.FC<ICTOfficerProps> = ({ role = 'ICT Officer', ti
     const officerId = (updatedOfficer as ICTOfficer).id
     if (!officerId) return
     try {
-      const response = await fetch(`http://localhost:8000/api/users/${officerId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${officerId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedOfficer)
@@ -232,7 +234,7 @@ export const ICTOfficer: React.FC<ICTOfficerProps> = ({ role = 'ICT Officer', ti
   const confirmDeleteOfficer = async () => {
     if (officerToDelete) {
       try {
-        const response = await fetch(`http://localhost:8000/api/users/${officerToDelete}`, {
+        const response = await fetch(`${API_BASE_URL}/api/users/${officerToDelete}`, {
           method: 'DELETE'
         })
         if (!response.ok) throw new Error('Failed to delete ICT officer')

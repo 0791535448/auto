@@ -31,6 +31,8 @@ import {
 } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
 interface Branch {
   id: number
   branch_name: string
@@ -81,13 +83,13 @@ export const Departments: React.FC = () => {
   const loadData = async () => {
     try {
       // Load branches
-      const branchResponse = await fetch('http://localhost:8000/api/branches?t=' + Date.now())
+      const branchResponse = await fetch(`${API_BASE_URL}/api/branches?t=` + Date.now())
       if (branchResponse.ok) {
         const branchData = await branchResponse.json()
         const branchesList = branchData.branches || []
         
         // Load users
-        const userResponse = await fetch('http://localhost:8000/api/users?t=' + Date.now())
+        const userResponse = await fetch(`${API_BASE_URL}/api/users?t=` + Date.now())
         let usersList: User[] = []
         if (userResponse.ok) {
           const userData = await userResponse.json()

@@ -1,0 +1,28 @@
+services:
+  # FastAPI backend (SQLite — no external database needed)
+  - type: web
+    name: ict-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DB_PATH
+        value: ict_automation.db
+
+  # Next.js frontend
+  - type: web
+    name: ict-frontend
+    runtime: node
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start -- -p $PORT
+    envVars:
+      # Set this to your backend's Render URL, e.g. https://ict-backend.onrender.com
+      # (Render env vars are inlined at build time, so changing it triggers a rebuild)
+      - key: NEXT_PUBLIC_API_URL
+        value: https://ict-backend.onrender.com

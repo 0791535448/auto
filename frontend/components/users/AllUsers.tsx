@@ -31,6 +31,8 @@ import {
 } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
 interface User {
   id: number
   username: string
@@ -82,7 +84,7 @@ export const AllUsers: React.FC<AllUsersProps> = ({ fixedRole, title }) => {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/users?t=' + Date.now())
+      const response = await fetch(`${API_BASE_URL}/api/users?t=` + Date.now())
       if (response.ok) {
         const data = await response.json()
         setUsers(data.users || [])
@@ -103,7 +105,7 @@ export const AllUsers: React.FC<AllUsersProps> = ({ fixedRole, title }) => {
 
   const loadBranches = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/branches?t=' + Date.now())
+      const response = await fetch(`${API_BASE_URL}/api/branches?t=` + Date.now())
       if (response.ok) {
         const data = await response.json()
         setBranchList(data.branches || [])
@@ -157,7 +159,7 @@ export const AllUsers: React.FC<AllUsersProps> = ({ fixedRole, title }) => {
 
   const handleAddUser = async (newUser: UserFormData) => {
     try {
-      const response = await fetch('http://localhost:8000/api/users', {
+      const response = await fetch(`${API_BASE_URL}/api/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newUser)
@@ -181,7 +183,7 @@ export const AllUsers: React.FC<AllUsersProps> = ({ fixedRole, title }) => {
     const userId = (updatedUser as User).id
     if (!userId) return
     try {
-      const response = await fetch(`http://localhost:8000/api/users/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedUser)
@@ -207,7 +209,7 @@ export const AllUsers: React.FC<AllUsersProps> = ({ fixedRole, title }) => {
     if (!resetUser) return
     setResetLoading(true)
     try {
-      const response = await fetch(`http://localhost:8000/api/users/${resetUser.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${resetUser.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: resetPassword, must_change_password: true })
@@ -240,7 +242,7 @@ export const AllUsers: React.FC<AllUsersProps> = ({ fixedRole, title }) => {
   const confirmDeleteUser = async () => {
     if (userToDelete) {
       try {
-        const response = await fetch(`http://localhost:8000/api/users/${userToDelete}`, {
+        const response = await fetch(`${API_BASE_URL}/api/users/${userToDelete}`, {
           method: 'DELETE'
         })
         if (!response.ok) throw new Error('Failed to delete user')

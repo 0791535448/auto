@@ -1,3 +1,5 @@
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
 // Test frontend-backend connection
 const axios = require('axios');
 
@@ -6,12 +8,12 @@ async function testConnection() {
     console.log('Testing connection to backend...');
     
     // Test basic connection
-    const response = await axios.get('http://localhost:8000/');
+    const response = await axios.get(`${API_BASE_URL}/`);
     console.log('✓ Backend connection successful');
     console.log('Response:', response.data);
     
     // Test login with correct credentials
-    const loginResponse = await axios.post('http://localhost:8000/login', {
+    const loginResponse = await axios.post(`${API_BASE_URL}/login`, {
       username: 'superadmin',
       password: 'password123'
     });
@@ -20,7 +22,7 @@ async function testConnection() {
     
     // Test login with incorrect credentials
     try {
-      await axios.post('http://localhost:8000/login', {
+      await axios.post(`${API_BASE_URL}/login`, {
         username: 'wronguser',
         password: 'wrongpass'
       });

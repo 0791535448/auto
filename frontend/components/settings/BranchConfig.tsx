@@ -19,6 +19,8 @@ import {
   X
 } from 'lucide-react'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
 interface Branch {
   id?: number
   branch_name: string
@@ -40,7 +42,7 @@ export const BranchConfig: React.FC = () => {
 
   const loadBranches = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/branches')
+      const response = await fetch(`${API_BASE_URL}/api/branches`)
       const data = await response.json()
       setBranches(data.branches || [])
     } catch (error) {
@@ -75,7 +77,7 @@ export const BranchConfig: React.FC = () => {
     try {
       let response;
       if (editingId) {
-        response = await fetch(`http://localhost:8000/api/branches/${editingId}`, {
+        response = await fetch(`${API_BASE_URL}/api/branches/${editingId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -84,7 +86,7 @@ export const BranchConfig: React.FC = () => {
         })
         setMessage('Branch updated successfully')
       } else {
-        response = await fetch('http://localhost:8000/api/branches', {
+        response = await fetch(`${API_BASE_URL}/api/branches`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -116,7 +118,7 @@ export const BranchConfig: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/branches/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/branches/${id}`, {
         method: 'DELETE',
       })
 

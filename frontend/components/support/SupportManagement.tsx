@@ -33,6 +33,8 @@ import {
 } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
 interface SupportTicket {
   id: string
   ticketNumber: string
@@ -124,14 +126,14 @@ export const SupportManagement: React.FC = () => {
   const loadDropdownData = async () => {
     try {
       // Load software data
-      const softwareResponse = await fetch('http://localhost:8000/api/software?t=' + Date.now())
+      const softwareResponse = await fetch(`${API_BASE_URL}/api/software?t=` + Date.now())
       if (softwareResponse.ok) {
         const softwareData = await softwareResponse.json()
         setSoftwareList(softwareData.software || [])
       }
 
       // Load branch data
-      const branchResponse = await fetch('http://localhost:8000/api/branches?t=' + Date.now())
+      const branchResponse = await fetch(`${API_BASE_URL}/api/branches?t=` + Date.now())
       if (branchResponse.ok) {
         const branchData = await branchResponse.json()
         setBranchList(branchData.branches || [])

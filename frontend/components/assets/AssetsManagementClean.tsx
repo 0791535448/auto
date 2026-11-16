@@ -95,7 +95,7 @@ export const AssetsManagementClean: React.FC = () => {
   const [isImporting, setIsImporting] = useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
-  const API_BASE_URL = 'http://localhost:8000'
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
   const handleExcelImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

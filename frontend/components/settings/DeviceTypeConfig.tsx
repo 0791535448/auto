@@ -17,6 +17,8 @@ import {
   X
 } from 'lucide-react'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
 interface DeviceType {
   id?: number
   device_type_name: string
@@ -38,7 +40,7 @@ export const DeviceTypeConfig: React.FC = () => {
 
   const loadDeviceTypes = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/device-types')
+      const response = await fetch(`${API_BASE_URL}/api/device-types`)
       const data = await response.json()
       setDeviceTypes(data.device_types || [])
     } catch (error) {
@@ -71,7 +73,7 @@ export const DeviceTypeConfig: React.FC = () => {
     try {
       let response;
       if (editingId) {
-        response = await fetch(`http://localhost:8000/api/device-types/${editingId}`, {
+        response = await fetch(`${API_BASE_URL}/api/device-types/${editingId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -80,7 +82,7 @@ export const DeviceTypeConfig: React.FC = () => {
         })
         setMessage('Device type updated successfully')
       } else {
-        response = await fetch('http://localhost:8000/api/device-types', {
+        response = await fetch(`${API_BASE_URL}/api/device-types`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -112,7 +114,7 @@ export const DeviceTypeConfig: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/device-types/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/device-types/${id}`, {
         method: 'DELETE',
       })
 

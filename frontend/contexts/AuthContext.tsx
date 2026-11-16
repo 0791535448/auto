@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import axios from 'axios'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
 interface User {
   id: number
   username: string
@@ -56,7 +58,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const fetchUser = async (authToken: string) => {
     try {
-      const response = await axios.get('http://localhost:8000/users/me', {
+      const response = await axios.get(`${API_BASE_URL}/users/me`, {
         headers: {
           Authorization: `Bearer ${authToken}`
         }
@@ -74,7 +76,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (username: string, password: string) => {
     try {
       console.log('Attempting login with:', username)
-      const response = await axios.post('http://localhost:8000/login', {
+      const response = await axios.post(`${API_BASE_URL}/login`, {
         username,
         password
       })

@@ -106,9 +106,9 @@ export const AssetsManagement: React.FC = () => {
   const [message, setMessage] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
-  const [assetToDelete, setAssetToDelete] = useState<string | null>(null)
+  const [assetToDelete, setAssetToDelete] = useState<number | null>(null)
 
-  const API_BASE_URL = 'http://localhost:8000'
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
   // Fetch assets from API
   const fetchAssets = async () => {

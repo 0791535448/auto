@@ -8,7 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
-import mysql.connector
 from datetime import datetime, timedelta
 import os
 from passlib.context import CryptContext
@@ -16,6 +15,8 @@ from jose import JWTError, jwt
 import secrets
 import json
 import bcrypt
+import db
+from db import Error as DBError
 
 app = FastAPI(title="ICT Infrastructure Automation API", version="1.0.0")
 
@@ -39,20 +40,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Database configuration
-DB_CONFIG = {
-    'host': os.getenv('DB_HOST', 'localhost'),
-    'user': os.getenv('DB_USER', 'root'),
-    'password': os.getenv('DB_PASSWORD', 'root'),
-    'database': os.getenv('DB_NAME', 'ict_automation')
-}
-
 def get_db_connection():
     try:
-        connection = mysql.connector.connect(**DB_CONFIG)
-        return connection
-    except mysql.connector.Error as err:
+        return db.connect()
+    except DBError as err:
         raise HTTPException(status_code=500, detail=f"Database connection error: {err}")
+
+db.init_db()
 
 # Authentication functions
 def verify_password(plain_password, stored_password):
@@ -164,13 +158,13 @@ class TokenData(BaseModel):
 class HardwareItem(BaseModel):
     id: Optional[int] = None
     asset_tag: str
-    device_type: str
-    make: str
-    model: str
+    device_type: Optional[str] = None
+    make: Optional[str] = None
+    model: Optional[str] = None
     serial_number: str
     purchase_date: str
-    warranty_expiry: str
-    status: str
+    warranty_expiry: Optional[str] = None
+    status: Optional[str] = None
     location: str
     assigned_to: Optional[str] = None
     created_at: Optional[datetime] = None
@@ -349,7 +343,7 @@ async def create_user_api(user: dict):
         ))
         conn.commit()
         return {"message": "User created successfully", "user_id": cursor.lastrowid}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         print(f"[create_user] MySQL error for {user.get('username')}: {err}")
         raise HTTPException(status_code=400, detail=str(err))
@@ -398,7 +392,7 @@ async def update_user_api(user_id: int, user: dict):
         )
         conn.commit()
         return {"message": "User updated successfully"}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -419,7 +413,7 @@ async def delete_user_api(user_id: int):
         cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
         conn.commit()
         return {"message": "User deleted successfully"}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -634,7 +628,7 @@ async def create_asset_dev(asset: dict):
         )
         conn.commit()
         return {"message": "Asset created successfully", "asset_id": cursor.lastrowid}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -660,7 +654,7 @@ async def create_asset(asset: dict, current_user: dict = Depends(get_current_act
         )
         conn.commit()
         return {"message": "Asset created successfully", "asset_id": cursor.lastrowid}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -685,7 +679,7 @@ async def update_asset_dev(asset_id: int, asset: dict):
         conn.commit()
 
         return {"message": "Asset updated successfully"}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -710,7 +704,7 @@ async def update_asset(asset_id: int, asset: dict, current_user: dict = Depends(
         conn.commit()
 
         return {"message": "Asset updated successfully"}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -1195,7 +1189,7 @@ async def create_software(software: dict):
         ))
         conn.commit()
         return {"message": "Software created successfully", "id": cursor.lastrowid}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -1224,7 +1218,7 @@ async def update_software(software_id: int, software: dict):
         ))
         conn.commit()
         return {"message": "Software updated successfully"}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -1240,7 +1234,7 @@ async def delete_software(software_id: int):
         cursor.execute("DELETE FROM software WHERE id = %s", (software_id,))
         conn.commit()
         return {"message": "Software deleted successfully"}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -1311,7 +1305,7 @@ async def create_fault_report(report: dict):
             f"{ticket_number}: {report.get('subject')} ({report.get('category', 'other')}, {report.get('priority', 'Medium')})",
             'issue')
         return {"message": "Fault report submitted successfully", "ticket_number": ticket_number}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         print(f"[create_fault_report] MySQL error: {err} | payload: { {k: (str(v)[:60]) for k, v in report.items()} }")
         raise HTTPException(status_code=400, detail=str(err))
@@ -1367,7 +1361,7 @@ async def update_fault_report(report_id: int, report: dict):
                 f"You have been assigned issue {ticket}: '{subject}'.",
                 'assignment')
         return {"message": "Fault report updated successfully"}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -1385,7 +1379,7 @@ async def assign_asset(asset_id: int, assignment: dict):
         )
         conn.commit()
         return {"message": "Asset assigned successfully"}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -1429,7 +1423,7 @@ async def acknowledge_asset(asset_id: int, payload: dict = Body(default={})):
                     cursor.execute("UPDATE issue_notes SET status = 'Acknowledged' WHERE id = %s", (note['id'],))
         conn.commit()
         return {"message": "Equipment receipt acknowledged"}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -1479,7 +1473,7 @@ async def create_repair_form(data: dict):
         ))
         conn.commit()
         return {"message": "Repair form saved successfully", "id": cursor.lastrowid}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -1518,7 +1512,7 @@ async def update_issue_note(note_id: int, data: dict):
         cursor.execute(f"UPDATE issue_notes SET {set_clause} WHERE id = %s", tuple(updates.values()) + (note_id,))
         conn.commit()
         return {"message": "Issue note updated successfully"}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -1583,7 +1577,7 @@ async def create_issue_note(data: dict):
             conn.commit()
 
         return {"message": "Issue note saved successfully", "id": new_id}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -1728,20 +1722,20 @@ async def import_assets(file: UploadFile = File(...)):
 def ensure_ticket_comments_table(cursor):
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS ticket_comments (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            report_id INT NOT NULL,
-            author VARCHAR(255) NOT NULL,
-            author_name VARCHAR(255),
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            report_id INTEGER NOT NULL,
+            author TEXT NOT NULL,
+            author_name TEXT,
             message TEXT NOT NULL,
-            archived TINYINT(1) NOT NULL DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            INDEX idx_report (report_id)
+            archived INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    cursor.execute(
-        "SELECT COUNT(*) AS c FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ticket_comments' AND COLUMN_NAME = 'archived'")
-    if cursor.fetchone()['c'] == 0:
-        cursor.execute("ALTER TABLE ticket_comments ADD COLUMN archived TINYINT(1) NOT NULL DEFAULT 0")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_tc_report ON ticket_comments(report_id)")
+    cursor.execute("PRAGMA table_info(ticket_comments)")
+    cols = {r[1] for r in cursor.fetchall()}
+    if 'archived' not in cols:
+        cursor.execute("ALTER TABLE ticket_comments ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
 
 # A ticket conversation is between two users only: the reporter and the assigned officer.
 # While a ticket is unassigned, ICT staff may still join so it can be picked up.
@@ -1822,7 +1816,7 @@ async def add_ticket_comment(report_id: int, data: dict):
             f"New reply on {ticket_label}: {message[:120]}",
             'message')
         return {"message": "Comment added"}
-    except mysql.connector.Error as err:
+    except DBError as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
     finally:
@@ -1834,16 +1828,16 @@ async def add_ticket_comment(report_id: int, data: dict):
 def ensure_notifications_table(cursor):
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS notifications (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            username VARCHAR(100) NOT NULL,
-            title VARCHAR(255) NOT NULL,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            title TEXT NOT NULL,
             message TEXT,
-            type VARCHAR(50) DEFAULT 'info',
-            is_read TINYINT(1) DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            INDEX idx_username (username)
+            type TEXT DEFAULT 'info',
+            is_read INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_notif_username ON notifications(username)")
 
 def create_notifications(usernames, title, message, ntype='info'):
     usernames = [u for u in set(usernames) if u]
@@ -1922,15 +1916,15 @@ async def mark_all_notifications_read(username: str):
 def ensure_password_resets_table(cursor):
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS password_resets (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            username VARCHAR(100) NOT NULL,
-            token VARCHAR(255) NOT NULL,
-            expires_at DATETIME NOT NULL,
-            used TINYINT(1) DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            INDEX idx_token (token)
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            token TEXT NOT NULL,
+            expires_at TEXT NOT NULL,
+            used INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_pr_token ON password_resets(token)")
 
 def send_reset_email(to_email, username, token):
     import smtplib
@@ -2040,4 +2034,4 @@ async def change_password(data: dict):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv('PORT', 8001)))

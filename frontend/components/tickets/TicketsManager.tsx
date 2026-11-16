@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { TicketComments } from '@/components/tickets/TicketComments'
 import { Edit2, Download, Printer } from 'lucide-react'
 
-const API_BASE_URL = 'http://localhost:8000'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 interface FaultReport {
   id: number

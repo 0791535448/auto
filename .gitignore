@@ -193,3 +193,9 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
+
+# SQLite database (generated at runtime)
+backend/ict_automation.db
+backend/ict_automation.db-journal
+backend/ict_automation.db-wal
+backend/ict_automation.db-shm

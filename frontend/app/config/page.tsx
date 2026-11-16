@@ -135,7 +135,7 @@ export default function ConfigurationPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((branch: Branch) => (
+              {(filteredData as Branch[]).map((branch) => (
                 <tr key={branch.id}>
                   <td className="font-medium">{branch.name}</td>
                   <td><Badge variant="outline">{branch.code}</Badge></td>
@@ -179,7 +179,7 @@ export default function ConfigurationPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((device: DeviceType) => (
+              {(filteredData as DeviceType[]).map((device) => (
                 <tr key={device.id}>
                   <td className="font-medium">{device.name}</td>
                   <td className="text-sm">{device.description}</td>
@@ -222,7 +222,7 @@ export default function ConfigurationPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((make: Make) => (
+              {(filteredData as Make[]).map((make) => (
                 <tr key={make.id}>
                   <td className="font-medium">{make.name}</td>
                   <td className="text-sm">{make.description}</td>
@@ -271,7 +271,7 @@ export default function ConfigurationPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((model: Model) => (
+              {(filteredData as Model[]).map((model) => (
                 <tr key={model.id}>
                   <td className="font-medium">{model.name}</td>
                   <td><Badge variant="outline">{model.makeName}</Badge></td>
@@ -315,7 +315,7 @@ export default function ConfigurationPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((status: Status) => (
+              {(filteredData as Status[]).map((status) => (
                 <tr key={status.id}>
                   <td className="font-medium">{status.name}</td>
                   <td className="text-sm">{status.description}</td>

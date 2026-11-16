@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
 export const IssueNotesContent = () => {
   const { user } = useAuth()
   const isSuperAdmin = user?.role === 'Super Admin'
@@ -37,7 +39,7 @@ export const IssueNotesContent = () => {
   const [submitting, setSubmitting] = useState(false)
 
   const loadNotes = () => {
-    fetch('http://localhost:8000/api/issue-notes')
+    fetch(`${API_BASE_URL}/api/issue-notes`)
       .then(r => r.json())
       .then(d => setSavedNotes(d.issue_notes || []))
       .catch(() => {})
@@ -45,11 +47,11 @@ export const IssueNotesContent = () => {
 
   useEffect(() => {
     loadNotes()
-    fetch('http://localhost:8000/api/branches')
+    fetch(`${API_BASE_URL}/api/branches`)
       .then(r => r.json())
       .then(data => setBranches(data.branches || []))
       .catch(() => {})
-    fetch('http://localhost:8000/api/users')
+    fetch(`${API_BASE_URL}/api/users`)
       .then(r => r.json())
       .then(data => {
         const list = data.users || []
@@ -57,7 +59,7 @@ export const IssueNotesContent = () => {
         setOfficers(list.filter((u: any) => ['ICT Officer', 'Technician'].includes(u.role)))
       })
       .catch(() => {})
-    fetch('http://localhost:8000/dev/assets')
+    fetch(`${API_BASE_URL}/dev/assets`)
       .then(r => r.json())
       .then(data => setAssets(Array.isArray(data) ? data : []))
       .catch(() => {})
@@ -97,7 +99,7 @@ export const IssueNotesContent = () => {
     setSubmitting(true)
     setSubmitMessage('')
     try {
-      const response = await fetch('http://localhost:8000/api/issue-notes', {
+      const response = await fetch(`${API_BASE_URL}/api/issue-notes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -174,7 +176,7 @@ export const IssueNotesContent = () => {
     if (!editingNote) return
     setEditSaving(true)
     try {
-      const res = await fetch(`http://localhost:8000/api/issue-notes/${editingNote.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/issue-notes/${editingNote.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -580,11 +582,11 @@ export const RepairFormContent = () => {
   const [allUsers, setAllUsers] = useState<{ id: number; username: string; full_name: string }[]>([])
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/branches')
+    fetch(`${API_BASE_URL}/api/branches`)
       .then(r => r.json())
       .then(data => setBranches(data.branches || []))
       .catch(() => {})
-    fetch('http://localhost:8000/api/users')
+    fetch(`${API_BASE_URL}/api/users`)
       .then(r => r.json())
       .then(data => {
         const list = data.users || []
@@ -602,7 +604,7 @@ export const RepairFormContent = () => {
     setSubmitting(true)
     setSubmitMessage('')
     try {
-      const response = await fetch('http://localhost:8000/api/repair-forms', {
+      const response = await fetch(`${API_BASE_URL}/api/repair-forms`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, devices: items })

@@ -142,3 +142,28 @@ The system includes the following main tables:
 ## License
 
 MIT License - see LICENSE file for details
+
+## Deploying to Render (free tier, SQLite)
+
+The app ships with a `render.yaml` blueprint that creates two free web services:
+
+1. **ict-backend** — FastAPI + SQLite (no MySQL needed). The database file is
+   created automatically on first boot from `backend/schema_sqlite.sql`.
+2. **ict-frontend** — Next.js production build.
+
+Steps:
+
+1. Push this repo to GitHub.
+2. In Render: **New → Blueprint** and pick the repo. Render reads `render.yaml`
+   and creates both services.
+3. After the backend deploys, copy its URL (e.g. `https://ict-backend.onrender.com`)
+   and set the frontend's `NEXT_PUBLIC_API_URL` env var to that URL, then redeploy
+   the frontend (the value is inlined at build time).
+4. Log in with `superadmin` / `password123`.
+
+Notes:
+
+- Free web services sleep after ~15 min idle; the first request takes ~30–60s.
+- The SQLite file lives on Render's **ephemeral disk** — data is reset on every
+  redeploy/restart. For persistent data you would need a paid instance with a
+  persistent disk (set `DB_PATH=/var/data/ict_automation.db` and attach a disk).

@@ -18,6 +18,8 @@ import {
   X
 } from 'lucide-react'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
 interface Make {
   id?: number
   make_name: string
@@ -38,7 +40,7 @@ export const MakeConfig: React.FC = () => {
 
   const loadMakes = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/makes')
+      const response = await fetch(`${API_BASE_URL}/api/makes`)
       const data = await response.json()
       setMakes(data.makes || [])
     } catch (error) {
@@ -72,7 +74,7 @@ export const MakeConfig: React.FC = () => {
     try {
       let response;
       if (editingId) {
-        response = await fetch(`http://localhost:8000/api/makes/${editingId}`, {
+        response = await fetch(`${API_BASE_URL}/api/makes/${editingId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -81,7 +83,7 @@ export const MakeConfig: React.FC = () => {
         })
         setMessage('Make updated successfully')
       } else {
-        response = await fetch('http://localhost:8000/api/makes', {
+        response = await fetch(`${API_BASE_URL}/api/makes`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -113,7 +115,7 @@ export const MakeConfig: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/makes/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/makes/${id}`, {
         method: 'DELETE',
       })
 

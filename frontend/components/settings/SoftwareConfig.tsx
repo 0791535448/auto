@@ -19,6 +19,8 @@ import {
   Calendar
 } from 'lucide-react'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
 interface Software {
   id?: number
   software_name: string
@@ -82,7 +84,7 @@ export const SoftwareConfig: React.FC = () => {
   const loadSoftware = async () => {
     try {
       // Load from API with cache busting and no-store directive
-      const response = await fetch('http://localhost:8000/api/software?t=' + Date.now(), {
+      const response = await fetch(`${API_BASE_URL}/api/software?t=` + Date.now(), {
         cache: 'no-cache',
         headers: {
           'Cache-Control': 'no-cache',
@@ -149,8 +151,8 @@ export const SoftwareConfig: React.FC = () => {
     
     try {
       const url = editingId 
-        ? `http://localhost:8000/api/software/${editingId}`
-        : 'http://localhost:8000/api/software'
+        ? `${API_BASE_URL}/api/software/${editingId}`
+        : `${API_BASE_URL}/api/software`
       
       const method = editingId ? 'PUT' : 'POST'
       
@@ -208,7 +210,7 @@ export const SoftwareConfig: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/software/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/software/${id}`, {
         method: 'DELETE',
       })
 
