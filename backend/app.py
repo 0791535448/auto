@@ -209,6 +209,8 @@ async def download_database(current_user: dict = Depends(get_current_active_user
     """Download the SQLite database file (Super Admin only)."""
     if current_user.get('role') != 'Super Admin':
         raise HTTPException(status_code=403, detail="Only Super Admins can download the database")
+    if db.DIALECT != 'sqlite':
+        raise HTTPException(status_code=400, detail="Database download is only available in SQLite mode")
     candidates = [db.DB_PATH, os.path.join(db.BASE_DIR, os.path.basename(db.DB_PATH))]
     db_path = next((p for p in candidates if os.path.exists(p)), None)
     if not db_path:
@@ -1733,6 +1735,24 @@ async def import_assets(file: UploadFile = File(...)):
 # ---------- Ticket Comments ----------
 
 def ensure_ticket_comments_table(cursor):
+    if db.DIALECT == 'mysql':
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS ticket_comments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                report_id INT NOT NULL,
+                author VARCHAR(255) NOT NULL,
+                author_name VARCHAR(255),
+                message TEXT NOT NULL,
+                archived TINYINT(1) NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_tc_report (report_id)
+            )
+        """)
+        cursor.execute(
+            "SELECT COUNT(*) AS c FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ticket_comments' AND COLUMN_NAME = 'archived'")
+        if cursor.fetchone()['c'] == 0:
+            cursor.execute("ALTER TABLE ticket_comments ADD COLUMN archived TINYINT(1) NOT NULL DEFAULT 0")
+        return
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS ticket_comments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1839,6 +1859,20 @@ async def add_ticket_comment(report_id: int, data: dict):
 # ---------- Notifications ----------
 
 def ensure_notifications_table(cursor):
+    if db.DIALECT == 'mysql':
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(100) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                message TEXT,
+                type VARCHAR(50) DEFAULT 'info',
+                is_read TINYINT(1) DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_username (username)
+            )
+        """)
+        return
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS notifications (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1927,6 +1961,19 @@ async def mark_all_notifications_read(username: str):
 # ---------- Password Reset ----------
 
 def ensure_password_resets_table(cursor):
+    if db.DIALECT == 'mysql':
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS password_resets (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(100) NOT NULL,
+                token VARCHAR(255) NOT NULL,
+                expires_at DATETIME NOT NULL,
+                used TINYINT(1) DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_token (token)
+            )
+        """)
+        return
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS password_resets (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
